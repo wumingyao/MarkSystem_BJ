@@ -354,6 +354,21 @@ class ClassInfoViewSet(viewsets.ViewSet):
                 lesson.name = name
                 lesson.college_id = 1
                 lesson.save()
+                # 设置初始大项
+                initTitleGroup = ['平时', '期中', '期末', '出勤', '加分', '分组']
+                weight = int(100 / (len(initTitleGroup) - 3))
+                for i in range(len(initTitleGroup)):
+                    titleGroup = TitleGroup()
+                    titleGroup.name = initTitleGroup[i]
+                    if titleGroup.name == '出勤' or titleGroup.name == '加分' or titleGroup.name == '分组':
+                        titleGroup.weight = 0
+                    else:
+                        if i == len(initTitleGroup) - 4:
+                            titleGroup.weight = 100 - weight * (len(initTitleGroup) - 4)
+                        else:
+                            titleGroup.weight = weight
+                    titleGroup.lesson = lesson
+                    titleGroup.save()
                 lesson_id = lesson.id
                 classInfo_set = ClassInfo.objects.filter(Q(name=name) & Q(lesson_id=lesson_id))
                 if classInfo_set.exists():
