@@ -107,6 +107,8 @@ class PointViewSet(viewsets.ViewSet):
             titleAverage=Avg('pointNumber')).values('title__id', 'title__name', 'title__weight', 'title__classInfo__id',
                                                     'title__classInfo__id', 'titleAverage'))
 
+
+
         # 该班级总人数
         total = Class.objects.filter(classInfo_id=classInfo_id).aggregate(count=Count('student_id', distinct=True))[
             'count']
@@ -130,7 +132,12 @@ class PointViewSet(viewsets.ViewSet):
             name = Student.objects.filter(id=id).values('name')
             # A.objects.all().aggregate(ab_sum=Sum(F('a') * F('b'), output_field=FloatField()))
             pointTotal = TitleGroupPerStudent.filter(student_id=id).aggregate(
-                total=Sum(F('titleAverage') * F('title__titleGroup__weight'), output_field=FloatField()))['total'] / 100
+                total=Sum(F('titleAverage') * F('title__titleGroup__weight'), output_field=FloatField()))['total']
+            if pointTotal is None:
+                count_60 = count_60 + 1
+                continue
+            else:
+                pointTotal=pointTotal/100
             if pointTotal < 60:
                 count_60 = count_60 + 1
             elif pointTotal < 70:
@@ -160,7 +167,6 @@ class PointViewSet(viewsets.ViewSet):
         avg = 0
         for TitleGroupavg in list(TitleGroupavgs):
             avg = avg + float(TitleGroupavg['title__titleGroup__weight']) / 100 * TitleGroupavg['titleAverage']
-
         result = {
             'titles': titles,
             'total': total,
@@ -168,8 +174,7 @@ class PointViewSet(viewsets.ViewSet):
             'rate': rate,
             'gradeSection': gradeSection
         }
-        if len(titles) == 0:
-            return query_failed()
+
         code_number = '2000'
         result = {
             'code': code_number,
